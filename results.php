@@ -1,17 +1,18 @@
 <html>
     <head>
-        <title>Euler.fm | Results</title>
-        <link type="text/css" rel="stylesheet" href="css/style.css">
-        <link rel="shortcut icon" href="favicon.png" />
-
-    </head>
-    <body>
         <?php
             ini_set('max_execution_time', 300);
             require 'gd.php';
             $user1 = filter_input(INPUT_POST, 'user1', FILTER_SANITIZE_SPECIAL_CHARS);
             $user2 = filter_input(INPUT_POST, 'user2', FILTER_SANITIZE_SPECIAL_CHARS);
         ?>
+        <title>Euler.fm | <?php echo $user1 . ' and '.  $user2;?></title>
+        <link type="text/css" rel="stylesheet" href="css/style.css">
+        <link rel="shortcut icon" href="favicon.png" />
+
+    </head>
+    <body>
+
         <h2>Euler.fm</h2>
         <form method="POST" action="results.php">
             <p>
@@ -31,10 +32,8 @@
     <?php
 
         function xml2array($xmlObject, $out = array()) {
-//            $i = 0;
-            foreach ($xmlObject as $node ) {
+            foreach ($xmlObject as $node) {
                 $out[$node['name']] = intval($node['playcount']);
-//                $i++;
             }
             return $out;
         }
@@ -126,20 +125,20 @@
         arsort($result);
         $k = count($result);
         
-        $filename = 'images/' . $user1 . '-' . $user2 . '.png';
-
         echo '<span>results for <strong>' . $user1 . '</strong> and <strong>' . $user2 . '</strong></span><br>';
         echo '<span>artist count = '. $i . ' and ' . $j . '</span><br>';
         echo '<span>'. $k . ' artists in common</span><br>';
 
         if ($i < $j) {
-            list($user2, $user1) = array($user1, $user2);
+            list($user2, $user1) = array($user1, $user2); // swap users
         }
+        
+        $filename = 'images/' . $user1 . '-' . $user2 . '.png';
 
         echo '<span class="red">red</span> - ' . $user1 . '<br><span class = "blue">blue</span> - ' . $user2 . '<br>';
         echo '<img src = "' . $filename . '">';
-
     ?>
+        
     <?php
         makeImage($i, $j, $k, $filename, array_diff($r[0], $result), array_diff_key($r[1], $result), $result);
     ?>
