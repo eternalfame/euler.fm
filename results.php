@@ -3,8 +3,8 @@
         <?php
             ini_set('max_execution_time', 300);
             require 'gd.php';
-            $user1 = filter_input(INPUT_POST, 'user1', FILTER_SANITIZE_SPECIAL_CHARS);
-            $user2 = filter_input(INPUT_POST, 'user2', FILTER_SANITIZE_SPECIAL_CHARS);
+            $user1 = filter_input(INPUT_GET, 'user1', FILTER_SANITIZE_SPECIAL_CHARS);
+            $user2 = filter_input(INPUT_GET, 'user2', FILTER_SANITIZE_SPECIAL_CHARS);
         ?>
         <title>Euler.fm | <?php echo $user1 . ' and '.  $user2;?></title>
         <link type="text/css" rel="stylesheet" href="css/style.css">
@@ -14,7 +14,7 @@
     <body>
 
         <h2>Euler.fm</h2>
-        <form method="POST" action="results.php">
+        <form method="GET" action="results.php">
             <p>
                 <label for="input_user1">first user:&nbsp&nbsp&nbsp&nbsp&nbsp
                     <input id="input_user1" name="user1" type="text" value="<?php echo $user1;?>"/>
