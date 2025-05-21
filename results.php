@@ -112,7 +112,6 @@
 		unset($val);
 		arsort($commonArtists);
 		
-
 		echo "<span>results for <strong>$user1</strong> and <strong>$user2</strong></span><br>";
 		echo "<span>artist count = " . count($arr1) . " and " . count($arr2) . "</span><br>";
 		echo "<span>listen count = $count1 and $count2</span><br>";
