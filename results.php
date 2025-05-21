@@ -30,117 +30,103 @@
             </p>
         </form>
     <?php
+		function xml2array($artistList): array {
+			$out = [];
+			foreach ($artistList as $node) {
+				$out[$node['name']] = (int) $node['playcount'];
+			}
+			return $out;
+		}
+		
+		function multiRequest(array $urls, array $options = []): array {
+			$curly = [];
+			$result = [];
+			$mh = curl_multi_init();
 
-        function xml2array($xmlObject, $out = array()) {
-            foreach ($xmlObject as $node) {
-                $out[$node['name']] = intval($node['playcount']);
-            }
-            return $out;
-        }
+			foreach ($urls as $id => $url) {
+				$curly[$id] = curl_init($url);
+				curl_setopt_array($curly[$id], [
+					CURLOPT_RETURNTRANSFER => 1,
+					CURLOPT_HEADER => 0
+				] + $options);
+				curl_multi_add_handle($mh, $curly[$id]);
+			}
 
-        function multiRequest($data, $options = array()) {
-            // array of curl handles
-            $curly = array();
-            // data to be returned
-            $result = array();
-            // multi handle
-            $mh = curl_multi_init();
+			do {
+				curl_multi_exec($mh, $running);
+			} while ($running > 0);
 
-            // loop through $data and create curl handles
-            // then add them to the multi-handle
-            foreach ($data as $id => $d) {
+			foreach ($curly as $id => $c) {
+				$response = curl_multi_getcontent($c);
+				$json = json_decode($response, true);
+				$result[$id] = xml2array($json['artists']['artist'] ?? []);
+				curl_multi_remove_handle($mh, $c);
+			}
 
-                $curly[$id] = curl_init();
-                $url = (is_array($d) && !empty($d['url'])) ? $d['url'] : $d;
-                curl_setopt($curly[$id], CURLOPT_URL,            $url);
-                curl_setopt($curly[$id], CURLOPT_HEADER,         0);
-                curl_setopt($curly[$id], CURLOPT_RETURNTRANSFER, 1);
-    //            curl_setopt($curly[$id], CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13');
-                // post?
-                if (is_array($d)) {
-                    if (!empty($d['post'])) {
-                        curl_setopt($curly[$id], CURLOPT_POST,       1);
-                        curl_setopt($curly[$id], CURLOPT_POSTFIELDS, $d['post']);
-                    }
-                }
-                // extra options?
-                if (!empty($options)) {
-                    curl_setopt_array($curly[$id], $options);
-                }
-                curl_multi_add_handle($mh, $curly[$id]);
-            }
-            // execute the handles
+			curl_multi_close($mh);
+			return $result;
+		}
 
-            $running = null;
-            do {
-                curl_multi_exec($mh, $running);
-            } while($running > 0);  
-            // get content and remove handles
-            foreach($curly as $id => $c) {
-                $request = curl_multi_getcontent($c);
-    //            $xml = new SimpleXMLElement($request);
-                $xml = json_decode($request, true);
-    //            $result[$id] =  xml2array($xml->topartists->artist);
-                $result[$id] = xml2array($xml['topartists']['artist']);
-                curl_multi_remove_handle($mh, $c);
-            }
-            // all done
-            curl_multi_close($mh);
-            return $result;
-        }
+		function buildParams(string $user, int $pages = 5): array {
+			$baseParams = [
+				'method' => 'library.getArtists',
+				'limit' => '2000',
+				'period' => 'overall',
+				'api_key' => '***REMOVED***',
+				'format' => 'json'
+			];
 
-        $params1 = array(
-            'method'  => 'user.gettopartists', // API функция
-            'user'    => $user1, // имя пользователя чьи чарты мы хотим видеть
-            'limit'   => '100500',
-            'period'  => 'overall', // период за который мы хотим видеть чарты
-            'api_key' => '***REMOVED***', // ваш API key
-            'format'  => 'json'
-        );
+			$urls = [];
+			for ($i = 1; $i <= $pages; $i++) {
+				$params = $baseParams + ['user' => $user, 'page' => $i];
+				$urls[] = 'http://ws.audioscrobbler.com/2.0/?' . http_build_query($params);
+			}
+			return $urls;
+		}
 
-        $params2 = array(
-            'method'  => 'user.gettopartists', // API функция
-            'user'    => $user2, // имя пользователя чьи чарты мы хотим видеть
-            'limit'   => '100500',
-            'period'  => 'overall', // период за который мы хотим видеть чарты
-            'api_key' => '***REMOVED***', // ваш API key
-            'format'  => 'json'
-        );
+		$allUrls = array_merge(
+			buildParams($user1, 3),
+			buildParams($user2, 3)
+		);
 
-        $data = array(
-            'http://ws.audioscrobbler.com/2.0/?' . http_build_query($params1, '', '&'),
-            'http://ws.audioscrobbler.com/2.0/?' . http_build_query($params2, '', '&')
-        );    
-
-        $r = multiRequest($data);
+		$responses = multiRequest($allUrls);
         
-        $i = count($r[0]);
-        $j = count($r[1]);
-//        var_dump($r);
-        $result = array_intersect_key($r[0], $r[1]);
-        
-        foreach ($result as $key => $value) {
-            $result[$key] = min($r[0][$key], $r[1][$key]);
-        }
-        arsort($result);
-        $k = count($result);
-        
-        echo '<span>results for <strong>' . $user1 . '</strong> and <strong>' . $user2 . '</strong></span><br>';
-        echo '<span>artist count = '. $i . ' and ' . $j . '</span><br>';
-        echo '<span>'. $k . ' artists in common</span><br>';
+		$arr1 = array_merge(...array_slice($responses, 0, 3));
+		$arr2 = array_merge(...array_slice($responses, 3, 3));
+		
+		$count1 = 0;
+		foreach ($arr1 as $name => $val) {
+			$count1 += $val;
+		}
+		$count2 = 0;
+		foreach ($arr2 as $name => $val) {
+			$count2 += $val;
+		}
 
-        if ($i < $j) {
-            list($user2, $user1) = array($user1, $user2); // swap users
-        }
-        
-        $filename = 'images/' . $user1 . '-' . $user2 . '.png';
+		$commonArtists = array_intersect_key($arr1, $arr2);
+		$commonArtistListenCount = 0;
+		foreach ($commonArtists as $name => &$val) {
+			$val = min($arr1[$name], $arr2[$name]);
+			$commonArtistListenCount += $val;
+		}
+		unset($val);
+		arsort($commonArtists);
+		
 
-        echo '<span class="red">red</span> - ' . $user1 . '<br><span class = "blue">blue</span> - ' . $user2 . '<br>';
-        echo '<img src = "' . $filename . '">';
-    ?>
-        
-    <?php
-        makeImage($i, $j, $k, $filename, array_diff($r[0], $result), array_diff_key($r[1], $result), $result);
-    ?>
+		echo "<span>results for <strong>$user1</strong> and <strong>$user2</strong></span><br>";
+		echo "<span>artist count = " . count($arr1) . " and " . count($arr2) . "</span><br>";
+		echo "<span>listen count = $count1 and $count2</span><br>";
+		echo "<span>" . count($commonArtists) . " artists in common</span><br>";
+		echo "<span>" . $commonArtistListenCount . " listens to common artists</span><br>";
+
+		if ($count1 < $count2) {
+			list($user1, $user2) = [$user2, $user1];
+		}
+
+		echo "<span class='red'>red</span> - $user1<br><span class='blue'>blue</span> - $user2<br>";
+
+		makeImage($count1, $count2, $commonArtistListenCount, array_diff_key($arr1, $commonArtists), array_diff_key($arr2, $commonArtists), $commonArtists);
+	?>
+	
     </body>
 </html>
