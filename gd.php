@@ -33,7 +33,13 @@ function drawCircle($im, $x, $y, $diameter, $fillColor, $strokeColor) {
 }
 
 function makeImage($s1, $s2, $s3, $artists1, $artists2, $artists3) {
+	if ($s1 == 0 && $s2 == 0) {
+		return;
+	}
+	
+	$invert = false;
 	if ($s1 < $s2) {
+		$invert = true;
 		list($s1, $s2) = [$s2, $s1];
 		list($artists1, $artists2) = [$artists2, $artists1];
 	}
@@ -89,17 +95,22 @@ function makeImage($s1, $s2, $s3, $artists1, $artists2, $artists3) {
     $im_h = $c1_d + $border * 2;
     $im = @imagecreatetruecolor($im_w, $im_h);
 
-    $red    = imagecolorallocate     ($im, 0xCC, 0x00, 0x00);
-    $red_a  = imagecolorallocatealpha($im, 0xCC, 0x00, 0x00, 96);
-    $blue   = imagecolorallocate     ($im, 0x00, 0x00, 0xCC);
-    $blue_a = imagecolorallocatealpha($im, 0x00, 0x00, 0xCC, 96);
+    $red    = imagecolorallocate     ($im, 252, 116, 47);
+    $red_a  = imagecolorallocatealpha($im, 252, 116, 47, 64);
+    $blue   = imagecolorallocate     ($im, 235, 44, 81);
+    $blue_a = imagecolorallocatealpha($im, 235, 44, 81, 64);
     $white  = imagecolorallocate     ($im, 0xFF, 0xFF, 0xFF);
     $purple = imagecolorallocate     ($im, 0x10, 0x1C, 0x10);
             
     imagefill($im, 1, 1, $white);
     
-	drawCircle($im, $c1_x, $c1_y, $c1_d, $red_a, $red);
-	drawCircle($im, $c2_x, $c1_y, $c2_d, $blue_a, $blue);
+	if ($invert) {	
+		drawCircle($im, $im_w - $c1_x, $c1_y, $c1_d, $blue_a, $blue);
+		drawCircle($im, $im_w - $c2_x, $c1_y, $c2_d, $red_a, $red);
+	} else {
+		drawCircle($im, $c1_x, $c1_y, $c1_d, $red_a, $red);
+		drawCircle($im, $c2_x, $c1_y, $c2_d, $blue_a, $blue);
+	}
 
     $font = 'FreeSans.ttf';
     $font_size = 8; 
@@ -111,10 +122,14 @@ function makeImage($s1, $s2, $s3, $artists1, $artists2, $artists3) {
 	$intersection_distance = intersection_distance($c1_d / 2, $c2_d / 2, $distance * $zoom);
 
     foreach ($artists3 as $key => $value) {
-        $box = imageftbbox($font_size, 0, $font, "$key ($value)");
+        $box = imageftbbox($font_size, 0, $font, $key . "(" . $value['playcount'] . ")");
         // text is center-aligned between two circles
-		$x = $c1_x + $intersection_distance - ($box[2] - $box[0]) / 2;
-        imagettftext($im, $font_size, 0, $x, $y, $purple, $font, "$key ($value)");
+		if ($invert) {
+			$x = $im_w - ($c1_x + $intersection_distance) - ($box[2] - $box[0]) / 2;
+		} else {
+			$x = $c1_x + $intersection_distance - ($box[2] - $box[0]) / 2;
+		}
+        imagettftext($im, $font_size, 0, $x, $y, $purple, $font, $key . "(" . $value['playcount'] . ")");
         $y += $margin;
         if ($y >= $c2_d + (($im_h - $c2_d) / 2) - $margin * 2) {
             break;
@@ -127,6 +142,6 @@ function makeImage($s1, $s2, $s3, $artists1, $artists2, $artists3) {
 	$imgData=ob_get_clean();
 	imagedestroy($im);
 	//Echo the data inline in an img tag with the common src-attribute
-	echo '<img src="data:image/png;base64,'.base64_encode($imgData).'" />';
+	echo '<img style="max-width: 100%" src="data:image/png;base64,'.base64_encode($imgData).'" />';
 	
 }

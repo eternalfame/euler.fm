@@ -1,0 +1,284 @@
+/* 
+    Created on : 03.12.2014, 17:45:10
+    Author     : durratino (Ol Mi)
+*/
+
+@import "reset.css";
+@import "grid.less";
+@import "variables.less";
+@import "colors.less";
+@import "mixins.less";
+@import "interface.less";
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ main ~~~~~~~~~~~~~~~~~~~~~~~ */
+body {
+    font: @fontSize @font;
+    line-height: @gutter;
+    color: @colorBase;
+    background: @colorBack;
+}
+
+.container {
+    .clearfix;
+    width: @total-width;
+    max-width: 1200px;
+    margin: auto;
+}
+
+section {
+    .standard;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ main elements ~~~~~~~~~~~~~~~~~~~~~~~ */
+h1, h2, h3 {
+    /* display and box model */
+    margin-bottom: @gutter;  
+    
+    /* other */
+    color: @colorDark;
+}
+
+h1, h2 {
+    .normal;
+    text-transform: uppercase;    
+}
+
+h1 {
+    .xxlarge;
+}
+
+h2 {
+    .xlarge;
+}
+
+h4 {
+    margin-bottom: @gutter;
+}
+
+section h2 {
+    /*text-indent: @gutter*4;*/
+}
+
+a {
+    .trans;
+    text-decoration: none;    
+}
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ header ~~~~~~~~~~~~~~~~~~~~~~~ */
+header {
+    .standard;
+    margin-bottom: @gutter * 1.5;
+    padding: @gutter/2 0;
+    /*.col(grey);*/   
+    
+    p {
+        .column(9);
+        /*.push(1);*/
+        margin-top: @gutter;        
+    }
+}
+
+.logo {
+    .column(3);
+    
+    /* display and box model */
+
+    /* if it's not a pic */
+    .xxlarge;
+    line-height: 1;
+    color: @colorBack;
+    letter-spacing: -0.05em;
+
+    b {
+        font-size: 0.93em;
+    }
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ form ~~~~~~~~~~~~~~~~~~~~~~~ */
+.form {
+    label {
+        .column(5);
+        color: @colorLight;       
+        
+        span {
+            .small;
+        }
+        
+        input {
+            .large;
+            display: block;
+            width: 100%;            
+        }
+        
+        @media @mobile {
+            .column(12);
+            
+            &:first-child {
+                margin-bottom: @gutter/2;
+            }
+        }
+    }
+    
+    b {
+        .column(1);
+        .xxxlarge;
+        
+        /* display and box model */
+        margin-top: @gutter/2+@gutter/10;
+        
+        /* other */
+        text-align: center;        
+        line-height: @gutter * 2;
+        color: @colorLighter;
+        
+        @media @tablet1 {
+            .xxlarge;
+            margin-top: @gutter/2+@gutter/4;
+        }
+        
+        @media @mobile {
+            display: none;
+        }
+    }
+    
+    #getResults {
+        .column(1);
+        margin-top: @gutter;
+        
+        @media @mobile {
+            .column(12);
+            .large;
+        }
+    }
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ about ~~~~~~~~~~~~~~~~~~~~~~~ */
+.about {
+    .column(12);
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ results ~~~~~~~~~~~~~~~~~~~~~~~ */
+.results {
+    .column(12);
+}
+
+.res-period {
+    .l-grid-col(12,2);
+    margin-bottom: @gutter;
+    
+    li {
+        text-align: center;
+        letter-spacing: 0.15em;
+    }
+    
+    a {
+        /* display and box model */
+        display: inline-block;
+        width: 100%;
+        padding: @gutter / 2 0;
+        
+        /* other */
+        background: @colorLighter;
+        color: @colorBack;
+    }   
+    
+}
+
+.res-users {
+    .l-grid-col(12,4);
+
+    li {
+        /* position */
+        position: relative;
+        
+        /* display and box model */
+        margin: 0 @gutter;
+
+        a {
+            color: @colorBack;
+
+            &:hover {
+                color: @colorDark;
+            }
+        }
+    } 
+    
+    h4 {
+        /* display and box model */
+        padding: @gutter / 2 0;
+        
+        /* other */
+        text-align: center;
+        background: @colorBack;
+        font-weight: bold;
+    }
+    
+    div {
+        padding: 0 0 @gutter;
+    }
+
+    span {
+        .xsmall;
+        /* position */
+        position: absolute;   
+        left: 0;
+        top: 50%;
+
+        /* display and box model */
+        display: block;
+        
+        /* other */
+        color: @colorBack;
+        transform: translateY(-50%);
+
+        &:last-child {
+            left: auto;
+            right: 0;
+        }
+    }
+
+}
+
+.res-users-1 li {
+    padding-left: @gutter * 3;
+}
+
+.res-users-2 {
+    li {
+        /* display and box model */
+        padding-right: @gutter * 3;
+
+        /* other */
+        text-align: right;
+
+        span {
+            left: auto;
+            right: 0;
+        }
+    }
+}
+
+.res-users-n li {
+    /* display and box model */
+    padding: 0 @gutter * 3;
+    
+    /* other */
+    text-align: center;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ buttons ~~~~~~~~~~~~~~~~~~~~~~~ */
+.buttons {
+    /*.column(12);*/
+    
+    .button {
+        .column(6);
+        .push(3);
+    }
+}
+
+.buttons .button {
+	height: auto!important;
+}
+
+/**/
+@import "media-queries.less";
+

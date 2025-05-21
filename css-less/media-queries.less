@@ -1,0 +1,26 @@
+/* 
+    Created on : 03.12.2014, 17:44:57
+    Author     : durratino (Ol Mi)
+*/
+@import "grid.less";
+
+
+/* Portrait */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) { 
+
+	.res-users.res-users {
+		.l-grid-col(12,12);
+	}
+	
+	header {
+		.logo {
+			.column(12);
+		}
+	
+		p {
+			display:none;
+		}
+	}
+}

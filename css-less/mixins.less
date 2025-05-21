@@ -1,0 +1,165 @@
+/* 
+    Created on : 03.12.2014, 17:45:42
+    Author     : durratino (Ol Mi)
+*/
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ base ~~~~~~~~~~~~~~~~~~~~~~~ */
+.standard() {   
+    margin-bottom:@gutter*2;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ color ~~~~~~~~~~~~~~~~~~~~~~~ */
+.rgbacol(@prop:background-color; @col:@colorBase; @op:0.5) {
+    @{prop}: rgba(red(@col),green(@col),blue(@col),@op);
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ theme ~~~~~~~~~~~~~~~~~~~~~~~ */
+.col(@col1; @col2) {
+    background-color: @col1;
+    color: @col2;
+}
+
+.theme(@col1;@col2;@col3;@col1-2;@col2-2;@col3-2) {    
+    a {
+        color: @col1;
+        &:hover {
+            color: @col1-2;
+        }
+    }
+    
+    input[type=submit],
+    .button {
+        background-color: @col1;
+        
+        &:hover {
+            background-color: @col1-2;
+        }
+    }
+    
+    .logo {
+        a {
+            .rgbacol(color; @col1; 0.8);
+            
+            &:hover {
+                color: @col1;
+            }
+        }
+        
+        b {
+            color: @col1;
+        }
+    }   
+    
+    .form {
+        label:first-child {  
+            input {
+                color: @col2;
+            } 
+        }
+        label:last-of-type {
+            input {
+                color: @col3;
+            }
+        } 
+    }
+    
+    .res-period .active a {
+        background: @col1;
+    }
+    
+    .res-period a:hover {
+        .rgbacol(@col:@col1; @op:0.8);
+        color: @colorBack;        
+    }
+    
+    .res-users-1 {
+        .rgbacol(@col:@col2; @op:0.8);
+        
+        h4 a {
+            color: @col2;
+            
+            &:hover {
+                color: @col22;
+            }
+        }
+    }
+    
+    .res-users-2 {
+        .rgbacol(@col:@col3; @op:0.8);
+
+        h4 a {
+            color: @col3;
+
+            &:hover {
+                color: @col32;
+            }
+        }
+    }
+    
+    .res-users-n {
+        .rgbacol(@col:@col1; @op:0.8);
+    }
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ typography ~~~~~~~~~~~~~~~~~~~~~~~ */
+.normal() {
+    font-size: @fontSize;
+}
+
+.xsmall() {
+    font-size: 0.75 * @fontSize;
+    line-height: 1;
+}
+
+.small() {
+    font-size: 0.875 * @fontSize;
+    line-height: 1;
+}
+
+.large() {
+    font-size: 1.25 * @fontSize;
+    line-height: 1;
+}
+
+.xlarge() {
+    font-size: 1.5 * @fontSize;
+    line-height: 1;
+}
+
+.xxlarge() {
+    font-size: 3 * @fontSize;
+}
+
+.xxxlarge() {
+    font-size: 4.5 * @fontSize;
+}
+
+
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ transitions ~~~~~~~~~~~~~~~~~~~~~~~ */
+.trans(@prop:all;@dur:300ms;@way:ease) {
+    -webkit-transition: @arguments;
+    -moz-transition: @arguments;
+    -o-transition: @arguments;
+    transition: @arguments;
+}
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~ lists ~~~~~~~~~~~~~~~~~~~~~~~ */
+.l-grid-col(@numcol, @colwid) {
+    .row(@numcol);
+    
+    & > * {
+        .column(@colwid,@numcol);
+    }
+}
+
+.l-horizontal() {
+    white-space: nowrap;
+    
+    & > * {
+        display: inline-block;
+        white-space: normal;
+    }
+}
