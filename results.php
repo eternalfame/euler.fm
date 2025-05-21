@@ -72,7 +72,7 @@
 				'method' => 'library.getArtists',
 				'limit' => '2000',
 				'period' => 'overall',
-				'api_key' => '***REMOVED***',
+				'api_key' => getenv("LASTFM_TOKEN"),
 				'format' => 'json'
 			];
 
