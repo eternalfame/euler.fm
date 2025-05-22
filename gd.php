@@ -5,7 +5,8 @@ class SVG {
 	
 	function __construct($im_w, $im_h) {
 		$this->content = '<?xml version="1.0" encoding="utf-8"?>
-			<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' . $im_w . '" height="' . $im_h . '">';
+			<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' . $im_w . '" height="' . $im_h . '">
+			';
 	}
 	
 	function drawCircle($class, $x, $y, $radius, $fillColor, $strokeColor) {
@@ -13,7 +14,7 @@ class SVG {
 	}
 	
 	function drawText($x, $y, $text, $fillColor) {
-		$this->content .= '<text font-size="12" font="Open Sans" text-anchor="middle" x="' . $x . '" y="' . $y . '" style="fill: ' . $fillColor . '">' . $text . '</text>';
+		$this->content .= '<text font-size="12" font="Open Sans" text-anchor="middle" x="' . $x . '" y="' . $y . '" style="fill: ' . $fillColor . ';">' . $text . '</text>';
 	}
 	
 	function drawLink($x, $y, $url, $text, $fillColor) {
@@ -128,6 +129,14 @@ function makeImage($s1, $s2, $s3, $artists1, $artists2, $artists3) {
 	// todo: fix the y-positioning of the text
 	$start_of_text = ($im_h - $c2_d) / 2 + $margin * 4; // it's y position of first string
 	$end_of_text = $c2_d + (($im_h - $c2_d) / 2) - $margin * 3;
+	
+	$maxArtistCount = ($end_of_text - $start_of_text) / $margin;
+	$curArtistCount = count($artists3);
+		
+	if ($curArtistCount < $maxArtistCount) {
+		$start_of_text = $start_of_text + ($end_of_text - $start_of_text) / 2 - $margin * (int)($curArtistCount / 2);
+	}
+	
     $y = $start_of_text;
 
 	$intersection_distance = intersection_distance($c1_d / 2, $c2_d / 2, $distance * $zoom);

@@ -13,7 +13,7 @@
 		$period = 'overall';
 	}
 	
-	$MAX_PER_PAGE = 1000;
+	$MAX_PER_PAGE = 500;
 
 	function xml2array($artistList): array {
 		$out = [];
@@ -24,33 +24,34 @@
 	}
 	
 	function multiRequest(array $urls, array $options = []): array {		
-		$curly = [];
-		$result = [];
 		$mh = curl_multi_init();
 
+		$requests = [];
 		foreach ($urls as $id => $url) {
-			$curly[$id] = curl_init($url);
-			curl_setopt_array($curly[$id], [
-				CURLOPT_RETURNTRANSFER => 1,
-				CURLOPT_HEADER => 0
+			$requests[$id] = curl_init($url);
+			curl_setopt_array($requests[$id], [
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_HEADER => false,
+				CURLOPT_SSL_VERIFYHOST => false,
+				CURLOPT_SSL_VERIFYPEER => false
 			] + $options);
-			curl_multi_add_handle($mh, $curly[$id]);
+			curl_multi_add_handle($mh, $requests[$id]);
 		}
-
+		
+		$running = null;
 		do {
 			curl_multi_exec($mh, $running);
 		} while ($running > 0);
 
-		foreach ($curly as $id => $c) {
-			$response = curl_multi_getcontent($c);
-			$json = json_decode($response, true);
-
-			$result[$id] = $json;
-			curl_multi_remove_handle($mh, $c);
+		$result = [];
+		foreach ($requests as $request) {
+			$response = curl_multi_getcontent($request);
+			$result[] = json_decode($response, true);
+			
+			curl_multi_remove_handle($mh, $request);
+			curl_close($request);
 		}
-
 		curl_multi_close($mh);
-		
 		return $result;
 	}
 		
@@ -62,15 +63,13 @@
 		return $result2;
 	}
 		
-	function buildParams(string $user, string $period, int $limit, int $pages = 5): array {
+	function buildParams(string $method, string $user, array $options = [], int $pages = 5): array {
 		$baseParams = [
 			'user' => $user,
-			'method' => 'user.getTopArtists',
-			'limit' => $limit,
-			'period' => $period,
+			'method' => $method,
 			'api_key' => getenv("LASTFM_TOKEN"),
 			'format' => 'json'
-		];
+		] + $options;
 
 		$urls = [];
 		for ($i = 1; $i <= $pages; $i++) {
@@ -81,10 +80,10 @@
 	}
 	
 	function getArtistCount($user1, $user2, $period) {
-		// stupid last.fm API does not have a method to retrieve the total artists count.
+		// stupid last.fm API does not have a method to retrieve the total artists count for a period.
 		$urls = array_merge(
-			buildParams($user1, $period, 1, 1), 
-			buildParams($user2, $period, 1, 1)
+			buildParams('user.getTopArtists', $user1, ['period' => $period, 'limit' => 1], 1), 
+			buildParams('user.getTopArtists', $user2, ['period' => $period, 'limit' => 1], 1)
 		);
 		
 		$responses = multiRequest($urls);		
@@ -92,13 +91,13 @@
 	}
 	
 	[$user1ArtistCount, $user2ArtistCount] = getArtistCount($user1, $user2, $period);
-	
+
 	$user1PageCount = ceil($user1ArtistCount / $MAX_PER_PAGE);
 	$user2PageCount = ceil($user2ArtistCount / $MAX_PER_PAGE);
 	
 	$allUrls = array_merge(
-		buildParams($user1, $period, $MAX_PER_PAGE, $user1PageCount),
-		buildParams($user2, $period, $MAX_PER_PAGE, $user2PageCount)
+		buildParams('user.getTopArtists', $user1, ['period' => $period, 'limit' => $MAX_PER_PAGE], $user1PageCount),
+		buildParams('user.getTopArtists', $user2, ['period' => $period, 'limit' => $MAX_PER_PAGE], $user2PageCount)
 	);
 
 	$responses = parseMultiRequest(multiRequest($allUrls));
@@ -173,11 +172,7 @@
 
             <section class="results">
                 <h2>Results</h2>
-                <!--                <h3>
-                                    Music compability between 
-                                    <a href="#">eternalfame</a>
-                                    and <a href="#">after-the-fall</a>
-                                </h3>-->
+
                 <ul class="res-period">
                     <li <?php if ($period == 'overall') {echo 'class="active"';}?>>
                         <a href="?period=overall<?php echo "&user1=" . $user1 . "&user2=" . $user2?>">overall</a>
@@ -208,7 +203,7 @@
                 <div class="res-users">
                     <div class="res-users-1">
                         <h4>
-                            <a href="https://www.last.fm/user/<?php echo $user1;?>"><?php echo $user1;?></a> only
+                            <a href="https://www.last.fm/user/<?php echo $user1;?>"><?php echo $user1;?></a> only (<?php echo $user1ArtistCount;?> artists)
                         </h4>
                         <ul>
 							<?php
@@ -226,7 +221,7 @@
                     
                     <div class="res-users-n">
                         <h4>
-                            together
+                            together (<?php echo count($commonArtists);?> artists)
                         </h4>
                         <ul>
 							<?php
@@ -245,7 +240,7 @@
                     
                     <div class="res-users-2">
                         <h4>
-                            <a href="https://www.last.fm/user/<?php echo $user2;?>"><?php echo $user2;?></a> only
+                            <a href="https://www.last.fm/user/<?php echo $user2;?>"><?php echo $user2;?></a> only (<?php echo $user2ArtistCount;?> artists)
                         </h4>
                         <ul>
 						<?php
