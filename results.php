@@ -122,7 +122,7 @@
 		$commonArtistListenCount += (int)$val['playcount'];
 	}
 	unset($val);
-	array_multisort(array_column($commonArtists, 'playcount'), SORT_DESC, $commonArtists);
+	array_multisort(array_column($commonArtists, 'playcount'), SORT_DESC, array_column($commonArtists, 'name'), SORT_ASC, $commonArtists);
 ?>
 
 <!DOCTYPE html>
