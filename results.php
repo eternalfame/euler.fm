@@ -1,4 +1,5 @@
 <?php
+	error_reporting(E_ERROR | E_PARSE);
 	ini_set('max_execution_time', 300);
 	require 'gd.php';
 	$user1 = filter_input(INPUT_GET, 'user1', FILTER_SANITIZE_SPECIAL_CHARS);
@@ -11,6 +12,8 @@
 	} else {
 		$period = 'overall';
 	}
+	
+	$MAX_PER_PAGE = 1000;
 
 	function xml2array($artistList): array {
 		$out = [];
@@ -20,7 +23,7 @@
 		return $out;
 	}
 	
-	function multiRequest(array $urls, array $options = []): array {
+	function multiRequest(array $urls, array $options = []): array {		
 		$curly = [];
 		$result = [];
 		$mh = curl_multi_init();
@@ -41,19 +44,29 @@
 		foreach ($curly as $id => $c) {
 			$response = curl_multi_getcontent($c);
 			$json = json_decode($response, true);
-			$result[$id] = xml2array($json['topartists']['artist'] ?? []);
+
+			$result[$id] = $json;
 			curl_multi_remove_handle($mh, $c);
 		}
 
 		curl_multi_close($mh);
+		
 		return $result;
 	}
 		
-	function buildParams(string $user, string $period, int $pages = 5): array {
+	function parseMultiRequest($result) {
+		$result2 = [];
+		foreach($result as $id => $data) {
+			$result2[$id] = xml2array($data['topartists']['artist'] ?? []);
+		}
+		return $result2;
+	}
+		
+	function buildParams(string $user, string $period, int $limit, int $pages = 5): array {
 		$baseParams = [
 			'user' => $user,
 			'method' => 'user.getTopArtists',
-			'limit' => '1000',
+			'limit' => $limit,
 			'period' => $period,
 			'api_key' => getenv("LASTFM_TOKEN"),
 			'format' => 'json'
@@ -66,16 +79,32 @@
 		}
 		return $urls;
 	}
-
+	
+	function getArtistCount($user1, $user2, $period) {
+		// stupid last.fm API does not have a method to retrieve the total artists count.
+		$urls = array_merge(
+			buildParams($user1, $period, 1, 1), 
+			buildParams($user2, $period, 1, 1)
+		);
+		
+		$responses = multiRequest($urls);		
+		return [(int)$responses[0]['topartists']['@attr']['total'], (int)$responses[1]['topartists']['@attr']['total']];
+	}
+	
+	[$user1ArtistCount, $user2ArtistCount] = getArtistCount($user1, $user2, $period);
+	
+	$user1PageCount = ceil($user1ArtistCount / $MAX_PER_PAGE);
+	$user2PageCount = ceil($user2ArtistCount / $MAX_PER_PAGE);
+	
 	$allUrls = array_merge(
-		buildParams($user1, $period, 6),
-		buildParams($user2, $period, 6)
+		buildParams($user1, $period, $MAX_PER_PAGE, $user1PageCount),
+		buildParams($user2, $period, $MAX_PER_PAGE, $user2PageCount)
 	);
 
-	$responses = multiRequest($allUrls);
+	$responses = parseMultiRequest(multiRequest($allUrls));
 	
-	$arr1 = array_merge(...array_slice($responses, 0, 6));
-	$arr2 = array_merge(...array_slice($responses, 6, 6));
+	$arr1 = array_merge(...array_slice($responses, 0, $user1PageCount));
+	$arr2 = array_merge(...array_slice($responses, $user1PageCount, $user2PageCount));
 	
 	$count1 = 0;
 	foreach ($arr1 as $name => $val) {
@@ -95,20 +124,6 @@
 	}
 	unset($val);
 	array_multisort(array_column($commonArtists, 'playcount'), SORT_DESC, $commonArtists);
-	
-	//echo "<span>results for <strong>$user1</strong> and <strong>$user2</strong></span><br>";
-	//echo "<span>artist count = " . count($arr1) . " and " . count($arr2) . "</span><br>";
-	//echo "<span>listen count = $count1 and $count2</span><br>";
-	//echo "<span>" . count($commonArtists) . " artists in common</span><br>";
-	//echo "<span>" . $commonArtistListenCount . " listens to common artists</span><br>";
-
-	//if ($count1 < $count2) {
-	//	list($user1, $user2) = [$user2, $user1];
-	//	list($arr1, $arr2) = [$arr2, $arr1];
-	//}
-
-	//echo "<span class='red'>red</span> - $user1<br><span class='blue'>blue</span> - $user2<br>";
-
 ?>
 
 <!DOCTYPE html>
@@ -193,7 +208,7 @@
                 <div class="res-users">
                     <div class="res-users-1">
                         <h4>
-                            <a href="#"><?php echo $user1;?></a> only
+                            <a href="https://www.last.fm/user/<?php echo $user1;?>"><?php echo $user1;?></a> only
                         </h4>
                         <ul>
 							<?php
@@ -230,7 +245,7 @@
                     
                     <div class="res-users-2">
                         <h4>
-                            <a href="#"><?php echo $user2;?></a> only
+                            <a href="https://www.last.fm/user/<?php echo $user2;?>"><?php echo $user2;?></a> only
                         </h4>
                         <ul>
 						<?php
