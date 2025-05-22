@@ -1,5 +1,32 @@
 <?php
 
+class SVG {
+	private $content = "";
+	
+	function __construct($im_w, $im_h) {
+		$this->content = '<?xml version="1.0" encoding="utf-8"?>
+			<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="' . $im_w . '" height="' . $im_h . '">';
+	}
+	
+	function drawCircle($class, $x, $y, $radius, $fillColor, $strokeColor) {
+		$this->content .= '<circle class="' . $class . '"cx="' . $x . '" cy="' . $y . '" r="' . $radius . '" style="fill: ' . $fillColor . '; stroke: ' . $strokeColor . '; stroke-width: 1"/>';
+	}
+	
+	function drawText($x, $y, $text, $fillColor) {
+		$this->content .= '<text font-size="12" font="Open Sans" text-anchor="middle" x="' . $x . '" y="' . $y . '" style="fill: ' . $fillColor . '">' . $text . '</text>';
+	}
+	
+	function drawLink($x, $y, $url, $text, $fillColor) {
+		$this->content .= '<a href="' . $url . '">';
+		$this->drawText($x, $y, $text, $fillColor);
+		$this->content .= '</a>';
+	}
+	
+	function output() {
+		return $this->content . '</svg>';
+	}
+}
+
 function area($r, $R, $d) {
     if ($r == 0 || $R == 0 || $d == 0) return 0;
 
@@ -27,13 +54,9 @@ function intersection_distance($R1, $R2, $d) {
     return $a;
 }
 
-function drawCircle($im, $x, $y, $diameter, $fillColor, $strokeColor) {
-	imagefilledellipse($im, $x, $y, $diameter, $diameter, $fillColor );
-    imageellipse      ($im, $x, $y, $diameter, $diameter, $strokeColor );
-}
-
 function makeImage($s1, $s2, $s3, $artists1, $artists2, $artists3) {
-	if ($s1 == 0 && $s2 == 0) {
+	if ($s1 == 0 || $s2 == 0) {
+		echo "It seems one of the users didn't listen to anything in this period :(";
 		return;
 	}
 	
@@ -81,67 +104,53 @@ function makeImage($s1, $s2, $s3, $artists1, $artists2, $artists3) {
     $c1_y = $c1_x;               // y coord  of big circle
     $c2_x = intval($c1_x + $distance * $zoom);
     $c2_d = intval($c1_d  * $dif);
-    
-	if ($distance == 0) {
-		$inters_r = $c2_d / 2.0;
-	} else if ($distance == $r1 + $r2) {
-		$inters_r = 0;
-	} else {
-		$inters_r = (($c1_d + $c2_d) / 2.0 - ($c2_x - $c1_x)) / 2.0;  // length of 
-                                // two circles' radiuses intersection   
-    }
 	
     $im_w = max($c2_x + $c2_d / 2, $c1_d) + $border * 2;
-    $im_h = $c1_d + $border * 2;
-    $im = @imagecreatetruecolor($im_w, $im_h);
+    $im_h = $c1_d + $border * 2;	
+	$im = new SVG($im_w, $im_h);
 
-    $red    = imagecolorallocate     ($im, 252, 116, 47);
-    $red_a  = imagecolorallocatealpha($im, 252, 116, 47, 64);
-    $blue   = imagecolorallocate     ($im, 235, 44, 81);
-    $blue_a = imagecolorallocatealpha($im, 235, 44, 81, 64);
-    $white  = imagecolorallocate     ($im, 0xFF, 0xFF, 0xFF);
-    $purple = imagecolorallocate     ($im, 0x10, 0x1C, 0x10);
-            
-    imagefill($im, 1, 1, $white);
-    
+    $color1  = "rgba(252, 116, 47, 1)";
+    $color1a = "rgba(252, 116, 47, 0.5)";
+    $color2  = "rgba(235, 44, 81, 1)";
+    $color2a = "rgba(235, 44, 81, 0.5)";
+    $white   = "rgba(255, 255, 255, 1)";
+                
 	if ($invert) {	
-		drawCircle($im, $im_w - $c1_x, $c1_y, $c1_d, $blue_a, $blue);
-		drawCircle($im, $im_w - $c2_x, $c1_y, $c2_d, $red_a, $red);
+		$im->drawCircle('red', $im_w - $c1_x, $c1_y, $c1_d / 2, $color2a, $color2);
+		$im->drawCircle('orange', $im_w - $c2_x, $c1_y, $c2_d / 2, $color1a, $color1);
 	} else {
-		drawCircle($im, $c1_x, $c1_y, $c1_d, $red_a, $red);
-		drawCircle($im, $c2_x, $c1_y, $c2_d, $blue_a, $blue);
+		$im->drawCircle('red', $c2_x, $c1_y, $c2_d / 2, $color2a, $color2);
+		$im->drawCircle('orange', $c1_x, $c1_y, $c1_d / 2, $color1a, $color1);
 	}
-
-    $font = 'FreeSans.ttf';
-    $font_size = 8; 
     
     $margin = 16;
-    $y = ($im_h - $c2_d) / 2 + $margin * 3; // it's y position of first string
-    // it's not very logical
+	// it's not very logical
+	// todo: fix the y-positioning of the text
+	$start_of_text = ($im_h - $c2_d) / 2 + $margin * 4; // it's y position of first string
+	$end_of_text = $c2_d + (($im_h - $c2_d) / 2) - $margin * 3;
+    $y = $start_of_text;
 
 	$intersection_distance = intersection_distance($c1_d / 2, $c2_d / 2, $distance * $zoom);
-
+	
+	// text is center-aligned between two circles
+	if ($invert) {
+		$x = $im_w - ($c1_x + $intersection_distance);
+	} else {
+		$x = $c1_x + $intersection_distance;
+	}
+	
+	if (count($artists3) == 0) {
+		$im->drawText($x, $im_h - $c1_d / 2, "No common artists :(", $white);
+	}
     foreach ($artists3 as $key => $value) {
-        $box = imageftbbox($font_size, 0, $font, $key . "(" . $value['playcount'] . ")");
-        // text is center-aligned between two circles
-		if ($invert) {
-			$x = $im_w - ($c1_x + $intersection_distance) - ($box[2] - $box[0]) / 2;
-		} else {
-			$x = $c1_x + $intersection_distance - ($box[2] - $box[0]) / 2;
-		}
-        imagettftext($im, $font_size, 0, $x, $y, $purple, $font, $key . "(" . $value['playcount'] . ")");
+		$im->drawLink($x, $y, $value['url'], $key . " (" . $value['playcount'] . ")", $white);
+
         $y += $margin;
-        if ($y >= $c2_d + (($im_h - $c2_d) / 2) - $margin * 2) {
+        if ($y >= $end_of_text) {
             break;
         }
     }
-    imagealphablending($im, true);
 	
-	ob_start();
-    imagepng($im);
-	$imgData=ob_get_clean();
-	imagedestroy($im);
 	//Echo the data inline in an img tag with the common src-attribute
-	echo '<img style="max-width: 100%" src="data:image/png;base64,'.base64_encode($imgData).'" />';
-	
+	echo $im->output();
 }
