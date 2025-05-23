@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+    <%- include('partials/head') %>
+    <body class="red">
+        <%- include('partials/header') %>
+
+        <div class="container">
+            <%- include('partials/form') %>
+            <%- include('partials/about') %>
+
+            <section class="results">
+                <h2>Results</h2>
+
+                <ul class="res-period">
+                    <li <%= period === 'overall' ? 'class=active' : '' %>>
+                        <a href="?period=overall&user1=<%= user1 %>&user2=<%= user2 %>">overall</a>
+                    </li>
+                    <li <%= period === '12month' ? 'class=active' : '' %>>
+                        <a href="?period=12month&user1=<%= user1 %>&user2=<%= user2 %>">12 months</a>
+                    </li>
+                    <li <%= period === '6month' ? 'class=active' : '' %>>
+                        <a href="?period=6month&user1=<%= user1 %>&user2=<%= user2 %>">6 months</a>
+                    </li>
+                    <li <%= period === '3month' ? 'class=active' : '' %>>
+                        <a href="?period=3month&user1=<%= user1 %>&user2=<%= user2 %>">3 months</a>
+                    </li>
+                    <li <%= period === '1month' ? 'class=active' : '' %>>
+                        <a href="?period=1month&user1=<%= user1 %>&user2=<%= user2 %>">last month</a>
+                    </li>
+                    <li <%= period === '7day' ? 'class=active' : '' %>>
+                        <a href="?period=7day&user1=<%= user1 %>&user2=<%= user2 %>">last week</a>
+                    </li>
+                </ul>
+
+                <div style="text-align:center; max-width: 100%">
+                    <%- svgImage %>
+                </div>
+
+                <div class="res-users">
+                    <div class="res-users-1">
+                        <h4>
+                            <a href="https://www.last.fm/user/<%= user1 %>"><%= user1 %></a> only (<%= user1ArtistCount %> artists)
+                        </h4>
+                        <ul>
+                            <% user1Artists.forEach(([name, val]) => { %>
+                                <li>
+                                    <span><%= val.playcount %></span>
+                                    <a href="<%= val.url %>"><%= name %></a>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    </div>
+
+                    <div class="res-users-n">
+                        <h4>
+                            together (<%= Object.keys(commonArtists).length %> artists)
+                        </h4>
+                        <ul>
+                            <% commonArtists.forEach(([name, val]) => { %>
+                                <li>
+                                    <span><%= val.playcountUser1 %></span>
+                                    <a href="<%= val.url %>"><%= name %></a>
+                                    <span><%= val.playcountUser2 %></span>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    </div>
+
+                    <div class="res-users-2">
+                        <h4>
+                            <a href="https://www.last.fm/user/<%= user2 %>"><%= user2 %></a> only (<%= user2ArtistCount %> artists)
+                        </h4>
+                        <ul>
+                            <% user2Artists.forEach(([name, val]) => { %>
+                                <li>
+                                    <span><%= val.playcount %></span>
+                                    <a href="<%= val.url %>"><%= name %></a>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+			<section class="buttons">
+                <a class="button" href="/">Wow! It's like magic! Let's do it one more time!</a>
+            </section>
+        </div>
+    </body>
+</html>

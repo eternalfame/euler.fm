@@ -1,0 +1,15 @@
+<section class="form">
+    <form method="GET" action="/results">
+        <label>
+            <span>enter the 1st username</span>
+            <input type="text" name="user1" value="<%= typeof user1 !== 'undefined' ? user1 : '' %>">
+        </label>                
+        <b>⋂</b>
+        <label>
+            <span>enter the 2nd username</span>
+            <input type="text" name="user2" value="<%= typeof user2 !== 'undefined' ? user2 : '' %>">
+        </label>                 
+        <input type="hidden" name="period" value="<%= period %>"/>
+        <input type="submit" value="GO!" id="getResults">
+    </form>
+</section>

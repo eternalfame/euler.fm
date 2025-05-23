@@ -1,4 +1,6 @@
-images/
+.idea/
+.env
+node_modules
 nbproject/
-images/*
 nbproject/*
+package-lock.json
