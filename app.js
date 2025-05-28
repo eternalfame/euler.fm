@@ -79,7 +79,7 @@ app.get('/results', async (req, res) => {
         const sortedUser1Artists = getSortedEntries(arr1);
         const sortedUser2Artists = getSortedEntries(arr2);
         const sortedCommonArtists = getSortedEntries(commonArtists);
-        const commonArtistsCount = sortedCommonArtists.count()
+        const commonArtistsCount = sortedCommonArtists.length;
 
         res.render('results', {
             user1, user2, period,
