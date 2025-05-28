@@ -1,7 +1,7 @@
 class SVG {
     constructor(im_w, im_h) {
         this.content = `<?xml version="1.0" encoding="utf-8"?>
-            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${im_w}" height="${im_h}">
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" viewBox="0 0 ${im_w} ${im_h}" style="max-width:${im_w}px">
         `;
     }
 
